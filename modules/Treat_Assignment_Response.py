@@ -114,7 +114,7 @@ class Get_Assignment_Data:
 
 
 
-    def get_filtered_assignment_data(self, assignments):
+    def get_filtered_assignment_data(self, assignments, day):
         details = {}
         subs_dict = {}
         analyzed_assignments = set()
@@ -122,6 +122,8 @@ class Get_Assignment_Data:
 
         default_due_date = datetime.now().replace(tzinfo=utc)
         run_date = datetime.now().replace(tzinfo=utc)
+
+        assignments = [asn for asn in assignments if asn and day in asn["attributes"]["assignment_category"]["data"]["attributes"]["name"]]
         
         for asn in assignments["data"]['assignments']["data"]:
             for dt in asn['attributes']['assignment_submission_content']:
@@ -206,10 +208,10 @@ class Get_Assignment_Data:
 
 
     
-    def filtered_data_df(self):
+    def filtered_data_df(self, day):
         try:
             assignment_data = self.get_assignment_data()
-            filtered_assignment_data = self.get_filtered_assignment_data(assignment_data)
+            filtered_assignment_data = self.get_filtered_assignment_data(assignment_data, day)
             filtered_assignment_data_records = self.get_filtered_assignment_data_records(filtered_assignment_data)
             data_df = pd.DataFrame(filtered_assignment_data_records)
             return data_df
