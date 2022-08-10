@@ -56,7 +56,7 @@ if github_token and strapi_token:
     print("\nCurrent week is {}\n".format(week))
     batch = 6
     run_number = 1
-    run_number = "b{}_d{}_r{}".format(batch, run_number)
+    run_number = "b{}_d{}_r{}".format(batch, day, run_number)
     base_url = state_dict["base_url"][platform]
     previous_analyzed_assignments = state_dict["previously_analyzed_assignments"]
     client_url = base_url + "/graphql"
