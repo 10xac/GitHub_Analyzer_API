@@ -1,5 +1,6 @@
 from collections import Counter
 import subprocess
+import time
 import requests
 
 
@@ -291,6 +292,7 @@ class Retrieve_Commit_History:
 
                             ref_url = "https://api.github.com/repos/{}/{}/commits/{}".format(self.owner, self.repo, commit_sha)
                             ref_r, ref_sc = send_get_req(ref_url, _header=self.headers)
+                            time.sleep(1)
                             
                             if ref_sc == 200:
                                 ref_json = ref_r.json()

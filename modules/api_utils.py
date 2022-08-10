@@ -1,5 +1,6 @@
 import json
 import shutil
+import time
 import requests
 import os
 import subprocess
@@ -281,23 +282,24 @@ def retrieve_repo_meta(resp_json, headers, user, branch) -> dict:
 
         # Retrieve language details
         dt[repo]["languages"] = get_topk_langs(user, repo, headers, topk=3)
-
+        time.sleep(1)
         # Retrieve branches details
         dt[repo]["branches"] = retrieve_num_branches(user, repo, headers)
-
+        time.sleep(1)
         # Retrieve branch sha
         if branch:
             branch_sha = retrieve_branch_sha(user, repo, headers, branch)
-
+            time.sleep(1)
             # Retrieve commit activity details
             dt[repo]["total_commits"] = retrieve_num_commits(user, repo, headers, sha=branch_sha)
-
+            time.sleep(1)
         else:
             # Retrieve commit activity details
             dt[repo]["total_commits"] = retrieve_num_commits(user, repo, headers)
-
+            time.sleep(1)
         # Retrieve contributors details
         dt[repo]["contributors"] = retrieve_contributors(user, repo, headers)
+        time.sleep(1)
 
         """# Retrieve clones details
         try:

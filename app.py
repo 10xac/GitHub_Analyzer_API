@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import sys
+import time
 import requests
 from flask import Flask, jsonify
 from modules.Retrieve_Commit_History import Retrieve_Commit_History
@@ -252,6 +253,7 @@ def single_repos_meta_single_repos_pyanalysis(user, token, repo_name, branch, ap
     headers = {"Authorization":"Bearer {}".format(token)}
     # send get request to github api
     resp, resp_status_code = send_get_req(_url="https://api.github.com/search/repositories?q=repo:{}/{}".format(user,repo_name), _header=headers)
+    time.sleep(1)
     if resp_status_code == 200:
         # retrive response body
         d = resp.json()
@@ -270,6 +272,7 @@ def single_repos_meta_single_repos_pyanalysis(user, token, repo_name, branch, ap
         if len(repo_details) == 0:
             print("Using alternate method to retrieve rpository details...\n")
             resp, resp_status_code = send_get_req(_url='https://api.github.com/repos/{}/{}'.format(user,repo_name), _header=headers)
+            time.sleep(1)
             if resp_status_code == 200:
                 # retrive response body
                 d = resp.json()
