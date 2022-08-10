@@ -18,7 +18,7 @@ if not cpath in sys.path:
   
 from modules.analyzer_utils import  get_repo_meta_pyanalysis
 
-
+start = datetime.now()
 
 platform = "stage"
 
@@ -46,6 +46,8 @@ if github_token and strapi_token:
     
     else:
         print("\nThe state file does not exit and system will exit now...\n")
+        end = datetime.now()
+        print("\nRun duration: {}\n".format(end - start))
         sys.exit(1)
 
     #current_week = datetime.now().isocalendar()[1] - 1
@@ -144,20 +146,28 @@ if github_token and strapi_token:
         to_strapi = Load_To_Strapi(platform, week, batch, run_number, base_url, github_df, github_token, strapi_token)
 
         to_strapi.run_to_load()  
-          
+        
+        end = datetime.now()
+        print("\nRun duration: {}\n".format(end - start))
     else:
         # if trainee data is not returned
         if isinstance(assignmnent_data_df, pd.DataFrame):
             print("No assignment data returned. Hence no entries to be made into metric rank and metric summary tables\n\n")
+            end = datetime.now()
+            print("\nRun duration: {}\n".format(end - start))
             sys.exit(1)
         
         else:
             print("There was an error retrieving assignment data {}".format(assignmnent_data_df["error"]))
+            end = datetime.now()
+            print("\nRun duration: {}\n".format(end - start))
             sys.exit(1)
 
 else:
     # if token is not returned
-    print("Error: Github and Strapi tokens were not found")
+    print("\nError: Github and Strapi tokens were not found")
+    end = datetime.now()
+    print("\nRun duration: {}\n".format(end - start))
     sys.exit(1)
 
 
