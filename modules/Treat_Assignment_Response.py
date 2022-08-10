@@ -216,7 +216,7 @@ class Get_Assignment_Data:
             data_df = pd.DataFrame(filtered_assignment_data_records)
             return data_df
         except Exception as e:
-            return {"error": e}
+            return {"error": repr(e)}
 
     def get_analyzed_assignments(self):
         """

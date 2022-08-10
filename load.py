@@ -152,7 +152,7 @@ if github_token and strapi_token:
             sys.exit(1)
         
         else:
-            print("There was an error retrieving assignment data".format(assignmnent_data_df["error"]))
+            print("There was an error retrieving assignment data {}".format(assignmnent_data_df["error"]))
             sys.exit(1)
 
 else:
