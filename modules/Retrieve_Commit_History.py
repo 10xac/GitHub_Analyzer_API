@@ -254,6 +254,7 @@ class Retrieve_Commit_History:
 
 
         commit_history = []
+        contribution_count = None
         for line in self.lines:
             l_split = line.split("\n")
             if len(l_split) > 0:
@@ -347,6 +348,9 @@ class Retrieve_Commit_History:
                 
                 contribution_count = [ {"author":a, "total_commits":c, "total_additions":addition_deletion_dict[a]["additions"], "total_deletions":addition_deletion_dict[a]["deletions"]} for a,c in contribution_count.items()]
             
+        if not contribution_count:
+            contribution_count = []
+        
         for c in commit_history:
             c["num_files"] = len(c["files"])
             c["files"] = c["files"][:max_files]

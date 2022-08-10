@@ -1242,8 +1242,12 @@ def get_git_branch():
     #get branch name
     stdout, stderr, return_code = run_cmd_process(cmd_list=['git', 'branch'])
     if return_code == 0:
-        branch = [a for a in stdout.split('\n') if a.find('*') >= 0][0]
-        branch = branch.replace('*', '').strip()
+        branch_extract = [a for a in stdout.split('\n') if a.find('*') >= 0]
+        if len(branch_extract) > 0:
+            branch = branch_extract[0]
+            branch = branch.replace('*', '').strip()
+        else:
+            branch = None
     else:
         branch = None
     return branch
