@@ -123,9 +123,9 @@ class Get_Assignment_Data:
         default_due_date = datetime.now().replace(tzinfo=utc)
         run_date = datetime.now().replace(tzinfo=utc)
 
-        assignments = [asn for asn in assignments if asn and day in asn["attributes"]["assignment_category"]["data"]["attributes"]["name"]]
+        assignments = [asn for asn in assignments["data"]['assignments']["data"] if asn and day in asn["attributes"]["assignment_category"]["data"]["attributes"]["name"]]
         
-        for asn in assignments["data"]['assignments']["data"]:
+        for asn in assignments:
             for dt in asn['attributes']['assignment_submission_content']:
                 due_date = asn["attributes"]["assignment_category"]["data"]["attributes"]["due_date"]
                 
