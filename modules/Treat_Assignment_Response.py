@@ -45,7 +45,7 @@ class Get_Assignment_Data:
 
         q_query = """query getAssingmentCategroy($batch: Int!,$topic:String!) {
         assignments(
-            pagination: { start: 0, limit: 1000 }
+            pagination: { start: 0, limit: 2000 }
             filters: {
             
             assignment_category: { topic:{eq:$topic} batch: { Batch: { eq: $batch } } }
