@@ -82,7 +82,7 @@ class Get_Assignment_Data:
 
         q_query = """query getAssingmentCategroy($batch: Int!,$topic:String!) {
         assignments(
-            pagination: { start: 0, limit: 1000 }
+            pagination: { start: 0, limit: 2000 }
             filters: {
             
             assignment_category: { topic:{eq:$topic} batch: { Batch: { eq: $batch } } }
@@ -161,7 +161,7 @@ class Get_Assignment_Data:
 
 
 
-    def get_filtered_assignment_data(self, assignments) -> dict:
+    def get_filtered_assignment_data(self, assignments, day) -> dict:
         """
         Filters the assignment data and returns a dictionary with the filtered data
 
@@ -182,10 +182,11 @@ class Get_Assignment_Data:
         if "error" in assignments:
             sys.exit("Error: {}".format(assignments["error"]))
         
-        
-        if assignments["data"]:
+        assignments = [asn for asn in assignments["data"]['assignments']["data"] if asn and day in asn["attributes"]["assignment_category"]["data"]["attributes"]["name"]]
 
-            for asn in assignments["data"]['assignments']["data"]:
+        if len(assignments) > 0:
+
+            for asn in assignments:
                 for dt in asn['attributes']['assignment_submission_content']:
                     due_date = asn["attributes"]["assignment_category"]["data"]["attributes"]["due_date"]
                     
@@ -281,7 +282,7 @@ class Get_Assignment_Data:
 
 
     
-    def filtered_data_df(self) -> pd.DataFrame or dict:
+    def filtered_data_df(self, day) -> pd.DataFrame or dict:
         """
         Creates a dataframe with the filtered assignment data records
         Returns a dataframe of the filtered records or a dictionary with the error message if any
@@ -294,7 +295,7 @@ class Get_Assignment_Data:
         """
         try:
             assignment_data = self.get_assignment_data()
-            filtered_assignment_data = self.get_filtered_assignment_data(assignment_data)
+            filtered_assignment_data = self.get_filtered_assignment_data(assignment_data, day)
             filtered_assignment_data_records = self.get_filtered_assignment_data_records(filtered_assignment_data)
             data_df = pd.DataFrame(filtered_assignment_data_records)
             return data_df

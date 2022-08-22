@@ -18,7 +18,7 @@ if not cpath in sys.path:
   
 from modules.analyzer_utils import   get_repo_meta_repo_analysis
 
-
+start = datetime.now()
 
 
 platform = "dev"
@@ -50,23 +50,22 @@ if github_token and strapi_token:
         sys.exit(1)
 
 
-    current_week = datetime.now().isocalendar()[1] - 5
-    training_week = current_week - 18
-    
+    #current_week = datetime.now().isocalendar()[1] - 1
+    training_week = 0
+    day = 1
+    day_str = "Day "+str(day)
     week= "week{}".format(training_week)
     print("\nCurrent week is {}\n".format(week))
-    batch = state_dict["batch"]
-    state_run_number = state_dict["run_number"]
-    run_number = "b{}_r{}".format(batch, state_run_number)
-
+    batch = 6
+    run_number = 1
+    run_number = "b{}_d{}_r{}".format(batch, day, run_number)
     base_url = state_dict["base_url"][platform]
     previous_analyzed_assignments = state_dict["previously_analyzed_assignments"]
-
     client_url = base_url + "/graphql"
     
     assgn = Get_Assignment_Data(week, batch, base_url, strapi_token, previous_analyzed_assignments)
+    assignmnent_data_df = assgn.filtered_data_df(day_str)
 
-    assignmnent_data_df = assgn.filtered_data_df()
 
     # check if assignmnent_data_df was returned
     if isinstance(assignmnent_data_df, pd.DataFrame) and not assignmnent_data_df.empty:
@@ -157,15 +156,21 @@ if github_token and strapi_token:
         # if trainee data is not returned
         if isinstance(assignmnent_data_df, pd.DataFrame):
             print("No assignment data returned. Hence no entries to be made into metric rank and metric summary tables\n\n")
+            end = datetime.now()
+            print("\nRun duration: {}\n".format(end - start))
             sys.exit(1)
         
         else:
             print("There was an error retrieving assignment data :\n{}".format(assignmnent_data_df["error"]))
+            end = datetime.now()
+            print("\nRun duration: {}\n".format(end - start))
             sys.exit(1)
 
 else:
     # if token is not returned
     print("Error: Github and Strapi tokens were not found")
+    end = datetime.now()
+    print("\nRun duration: {}\n".format(end - start))
     sys.exit(1)
 
 
