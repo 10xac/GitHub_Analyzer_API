@@ -1,5 +1,6 @@
 import json
 import shutil
+import time
 import requests
 import os
 import subprocess
@@ -279,25 +280,24 @@ def retrieve_repo_meta(resp_json, headers, user, branch) -> dict:
 
         # Retrieve language details
         dt[repo]["languages"] = get_topk_langs(user, repo, headers, topk=3)
-
+        time.sleep(1)
         # Retrieve branches details
         dt[repo]["branches"] = retrieve_num_branches(user, repo, headers)
-
+        time.sleep(1)
         # Retrieve branch sha
         if branch:
             branch_sha = retrieve_branch_sha(user, repo, headers, branch)
-
+            time.sleep(1)
             # Retrieve commit activity details
-            dt[repo]["total_commits"] = retrieve_num_commits(
-                user, repo, headers, sha=branch_sha)
-
+            dt[repo]["total_commits"] = retrieve_num_commits(user, repo, headers, sha=branch_sha)
+            time.sleep(1)
         else:
             # Retrieve commit activity details
-            dt[repo]["total_commits"] = retrieve_num_commits(
-                user, repo, headers)
-
+            dt[repo]["total_commits"] = retrieve_num_commits(user, repo, headers)
+            time.sleep(1)
         # Retrieve contributors details
         dt[repo]["contributors"] = retrieve_contributors(user, repo, headers)
+        time.sleep(1)
 
         """# Retrieve clones details
         try:
@@ -1402,11 +1402,15 @@ def get_git_branch():
     """
     Returns the current git branch
     """
-    # get branch name
+    #get branch name
     stdout, stderr, return_code = run_cmd_process(cmd_list=['git', 'branch'])
     if return_code == 0:
-        branch = [a for a in stdout.split('\n') if a.find('*') >= 0][0]
-        branch = branch.replace('*', '').strip()
+        branch_extract = [a for a in stdout.split('\n') if a.find('*') >= 0]
+        if len(branch_extract) > 0:
+            branch = branch_extract[0]
+            branch = branch.replace('*', '').strip()
+        else:
+            branch = None
     else:
         branch = None
     return branch
