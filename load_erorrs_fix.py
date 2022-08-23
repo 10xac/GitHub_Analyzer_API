@@ -19,7 +19,7 @@ from modules.analyzer_utils import get_repo_meta_repo_analysis
 
 
 
-platform = "prod"
+platform = "stage"
 
 if os.path.exists(".env/secret.json"):
     with open(".env/secret.json", "r") as s:
@@ -47,18 +47,16 @@ if github_token and strapi_token:
         print("\nThe state file does not exit and system will exit now...\n")
         sys.exit(1)
 
-
-    current_week = datetime.now().isocalendar()[1] - 10
-    training_week = current_week - 18
-    
+    training_week = 0
+    day = 2
+    day_str = "Day "+str(day)
     week= "week{}".format(training_week)
     print("\nCurrent week is {}\n".format(week))
-    batch = state_dict["batch"]
-    state_run_number = state_dict["run_number"]
-    run_number = "b{}_r{}".format(batch, state_run_number)
-
+    batch = 6
+    run_number = 1
+    run_number = "b{}_d{}_r{}".format(batch, day, run_number)
     base_url = state_dict["base_url"][platform]
-
+    previous_analyzed_assignments = state_dict["previously_analyzed_assignments"]
     client_url = base_url + "/graphql"
 
     
