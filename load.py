@@ -1,4 +1,4 @@
-from datetime import datetime
+# from datetime import datetime
 import json
 import os
 import sys
@@ -7,7 +7,7 @@ import pickle
 from modules.Load_to_starpi import Load_To_Strapi
 from modules.Prepare_Assignment_Submissions import PrepareAssignmentDf
 from modules.Treat_Assignment_Response import Get_Assignment_Data
-
+import datetime
 
 curdir = os.path.dirname(os.path.realpath(__file__))
 cpath = os.path.dirname(curdir)
@@ -106,7 +106,7 @@ def run_git_analysis_detail(platform="dev"):
             sys.exit(1)
 
 
-        current_week = datetime.now().isocalendar()[1] - 0
+        current_week = datetime.datetime.now().isocalendar()[1] - 0
         training_week = current_week - 33
         
         week= "week{}".format(training_week)
@@ -144,7 +144,7 @@ def run_git_analysis_detail(platform="dev"):
 
             prep_assn = PrepareAssignmentDf(assignmnent_data_df, run_number, "root_url")
 
-            now_date = datetime.now()
+            now_date = datetime.datetime.now()
             now_folder = now_date.strftime("%Y-%m-%d")
             now_str = now_date.strftime("%Y-%m-%d_%H-%M-%S")
             
@@ -231,7 +231,7 @@ if __name__=="__main__":
     parsed_args = parser.parse_args()
     
     tfilter =  get_submission_day()
-    get_token()
+    # get_token()
     platform= ""
    
     if parsed_args.env =="dev":
@@ -249,5 +249,5 @@ if __name__=="__main__":
         print(f"WARNING: No assignmet submission filter found filters are Final, Interim")
         
     else:
-        
+        print("todo")
         run_git_analysis_detail(platform)
