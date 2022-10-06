@@ -231,7 +231,7 @@ if __name__=="__main__":
     parsed_args = parser.parse_args()
     
     tfilter =  get_submission_day()
-    # get_token()
+    get_token()
     platform= ""
    
     if parsed_args.env =="dev":
