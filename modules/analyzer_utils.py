@@ -68,7 +68,8 @@ if os.path.exists(".env/env_var.json"):
         host = env_var["host"]
         port = env_var["port"]
         api_root = "http://{}:{}/".format(host, port)
-
+else:
+    get_token()
 
 def get_id_userid_df(data_dict)->pd.DataFrame:
     """
