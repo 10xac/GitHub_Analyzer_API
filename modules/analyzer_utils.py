@@ -7,6 +7,8 @@ import sys
 
 from app import get_user, retrieve_commit_history, single_repos_meta_single_repos_analysis
 from modules.graphql import GraphQLClient
+
+
 from secret import get_auth
 
 github_token = None
@@ -36,6 +38,8 @@ def get_token():
         print ("Successfully created secret.json file")
     except Exception as e:
         print("Unable to create secret.json file")
+
+
 
 
 if os.path.exists(".env/secret.json"):
