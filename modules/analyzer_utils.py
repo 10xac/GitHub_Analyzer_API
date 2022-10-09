@@ -7,14 +7,45 @@ import sys
 
 from app import get_user, retrieve_commit_history, single_repos_meta_single_repos_analysis
 from modules.graphql import GraphQLClient
+from secret import get_auth
 
 github_token = None
+
+
+
+def get_token():
+    gittoken = get_auth(ssmkey="git_token_tenx",
+                 fconfig=f'.env/git_token.json',
+                 envvar='gittoken',
+                 )
+    devtoken = get_auth(ssmkey="staging/strapi/token",
+                 fconfig=f'.env/dev-cms.json',
+                 envvar='devtoken',
+                 )
+    secret_dic =  {
+                "github_token": gittoken['token'],
+                "strapi_token": {
+                    "dev": devtoken['token'],
+                    "prod":devtoken['token'],
+                    "stage": devtoken['token'],
+                                }
+                    }
+    try:
+        with open(".env/secret.json", "w") as outfile:
+            json.dump(secret_dic , outfile)
+        print ("Successfully created secret.json file")
+    except Exception as e:
+        print("Unable to create secret.json file")
+
 
 if os.path.exists(".env/secret.json"):
     
     with open(".env/secret.json", "r") as s:
         secrets = json.load(s)
         github_token = secrets["github_token"]
+        
+else:
+    get_token()
 
 if os.path.exists(".env/env_var.json"):
     with open(".env/env_var.json", "r") as e:
