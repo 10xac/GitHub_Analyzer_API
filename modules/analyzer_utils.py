@@ -44,8 +44,8 @@ def get_token():
         with open(".env/secret.json", "w") as outfile:
             json.dump(secret_dic , outfile)
         
-        with open(".env/env_var.json", "w") as outfile:
-            json.dump(env_var_dic , outfile)
+        with open(".env/env_var.json", "w") as file:
+            json.dump(env_var_dic , file)
         print ("Successfully created secret.json, env_var.json file")
     except Exception as e:
         print("Unable to create secret.json, env_var.json file")
