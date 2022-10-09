@@ -32,12 +32,23 @@ def get_token():
                     "stage": devtoken['token'],
                                 }
                     }
+    
+    
+    
+    env_var_dic={
+                "port": 5000,
+                "host": "127.0.0.1."
+            }
+
     try:
         with open(".env/secret.json", "w") as outfile:
             json.dump(secret_dic , outfile)
-        print ("Successfully created secret.json file")
+        
+        with open(".env/env_var.json", "w") as outfile:
+            json.dump(env_var_dic , outfile)
+        print ("Successfully created secret.json, env_var.json file")
     except Exception as e:
-        print("Unable to create secret.json file")
+        print("Unable to create secret.json, env_var.json file")
 
 
 
