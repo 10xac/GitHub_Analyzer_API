@@ -21,7 +21,7 @@ class Get_Assignment_Data:
         filtered_data_df: creates a dataframe from the filtered assignment data into a list of records.
         get_analyzed_assignments: returns a list of assignments that have been analyzed
     """
-    def __init__(self, week, batch, base_url, token, previous_analyzed_assignments=[]) -> None:
+    def __init__(self, week, batch, base_url, token, previous_analyzed_assignments=[], challenge = 2) -> None:
         """
         Initializes the class
         
@@ -43,6 +43,7 @@ class Get_Assignment_Data:
         self.base_url = base_url
         self.token = token
         self.previous_analyzed_assignments = previous_analyzed_assignments
+        self.challenge= challenge
 
 
 
@@ -78,62 +79,123 @@ class Get_Assignment_Data:
             a list of assignments retrieved from strapi assignment tale or a dictionary with error message 
         """
 
-        week = "week "+ self.week[4:]
+        if self.challenge:
+            topic = "Algorand_challenge "+str(self.challenge)
+            # {"topic": "Algorand_challenge 2"}
+            q_query = """query getAssingmentCategroy($topic:String!) {
+                    assignments(
+                        pagination: { start: 0, limit: 1000 }
+                        filters: {
+                        
+                        assignment_category: { topic:{eq:$topic}  }
+                        }
+                    ) {
+                        data {
+                        id
+                        attributes {
+                            assignment_submission_content
+                            gclass_submission_identifier
+                            assignment_category{
+                            data{
+                                attributes{
+                                name
+                                topic
+                                due_date
+                                }
+                            }
+                            }
+                            trainee {
+                            data {
+                                id
+                                attributes {
+                                email
+                                trainee_id
+                                }
+                            }
+                            }
+                        }
+                        }
+                    }
+                    }"""
 
-        q_query = """query getAssingmentCategroy($batch: Int!,$topic:String!) {
-        assignments(
-            pagination: { start: 0, limit: 1000 }
-            filters: {
+            q_variables = { "topic": topic}
             
-            assignment_category: { topic:{eq:$topic} batch: { Batch: { eq: $batch } } }
-            }
-        ) {
-            data {
-            id
-            attributes {
-                assignment_submission_content
-                gclass_submission_identifier
-                assignment_category{
-                data{
-                    attributes{
-                    name
-                    topic
-                    due_date
-                    }
-                }
-                }
-                trainee {
-                data {
-                    id
-                    attributes {
-                    email
-                    trainee_id
-                    }
-                }
-                }
-            }
-            }
-        }
-        }"""
 
-        q_variables = {"batch": self.batch, "topic": week}
-        
+            url = self.base_url+"/graphql?query={}&variables={}".format(q_query, json.dumps(q_variables))
 
-        url = self.base_url+"/graphql?query={}&variables={}".format(q_query, json.dumps(q_variables))
+            #url = base_url+"/graphql?query={}".format(query)
 
-        #url = base_url+"/graphql?query={}".format(query)
+            if self.token:
+                headers = { "Authorization": "Bearer {}".format(self.token), "Content-Type": "application/json"}
+            else:
+                headers = {"Content-Type": "application/json"}
 
-        if self.token:
-            headers = { "Authorization": "Bearer {}".format(self.token), "Content-Type": "application/json"}
+            try:
+                resp, resp_status = self.send_get_req(url, headers)
+
+                return resp.json()
+            except Exception as e:
+                return {"error": repr(e)} # return error message if any
+
+
         else:
-            headers = {"Content-Type": "application/json"}
 
-        try:
-            resp, resp_status = self.send_get_req(url, headers)
+            week = "week "+ self.week[4:]
 
-            return resp.json()
-        except Exception as e:
-            return {"error": repr(e)} # return error message if any
+            q_query = """query getAssingmentCategroy($batch: Int!,$topic:String!) {
+            assignments(
+                pagination: { start: 0, limit: 1000 }
+                filters: {
+                
+                assignment_category: { topic:{eq:$topic} batch: { Batch: { eq: $batch } } }
+                }
+            ) {
+                data {
+                id
+                attributes {
+                    assignment_submission_content
+                    gclass_submission_identifier
+                    assignment_category{
+                    data{
+                        attributes{
+                        name
+                        topic
+                        due_date
+                        }
+                    }
+                    }
+                    trainee {
+                    data {
+                        id
+                        attributes {
+                        email
+                        trainee_id
+                        }
+                    }
+                    }
+                }
+                }
+            }
+            }"""
+
+            q_variables = {"batch": self.batch, "topic": week}
+            
+
+            url = self.base_url+"/graphql?query={}&variables={}".format(q_query, json.dumps(q_variables))
+
+            #url = base_url+"/graphql?query={}".format(query)
+
+            if self.token:
+                headers = { "Authorization": "Bearer {}".format(self.token), "Content-Type": "application/json"}
+            else:
+                headers = {"Content-Type": "application/json"}
+
+            try:
+                resp, resp_status = self.send_get_req(url, headers)
+
+                return resp.json()
+            except Exception as e:
+                return {"error": repr(e)} # return error message if any
 
     
     def link_root(self, lnk) -> str:
