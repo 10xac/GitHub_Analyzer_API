@@ -439,3 +439,19 @@ class Retrieve_Commit_History:
                     return {"error": "Specified branch: {} \nDoes not exist".format(self.branch)}
                 else:
                     return {"error": "Default branch: {} \nDoes not exist".format(self.default_branch)}
+                
+
+if __name__ == '__main__':
+
+
+    branch_dict={'default':'packaging','branch':'main'} 
+    github_dict={'token':'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',
+                'owner':'10xac',
+                'repo':'https://github.com/10xac/GitHub_Analyzer_API'}
+    chis = Retrieve_Commit_History(branch_dict, github_dict)
+
+
+    
+    res = chis.get_commit_history_and_contributors()
+    print(res['commit_history'][0])
+    print([x['files'] for x in res['commit_history']])
