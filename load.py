@@ -78,7 +78,7 @@ def get_submission_day():
             return tfilter
 
 
-def run_git_analysis_detail(platform="dev"):
+def run_git_analysis_detail(platform="dev", challenge=None):
     if os.path.exists(".env/secret.json"):
         with open(".env/secret.json", "r") as s:
             secret = json.load(s)
@@ -119,8 +119,8 @@ def run_git_analysis_detail(platform="dev"):
         previous_analyzed_assignments = state_dict["previously_analyzed_assignments"]
 
         client_url = base_url + "/graphql"
-        
-        assgn = Get_Assignment_Data(week, batch, base_url, strapi_token, previous_analyzed_assignments)
+        print(f"INFO: Getting Challenge {challenge} submissions")
+        assgn = Get_Assignment_Data(week, batch, base_url, strapi_token, previous_analyzed_assignments, challenge=challenge)
 
         assignmnent_data_df = assgn.filtered_data_df()
 
@@ -230,7 +230,8 @@ if __name__=="__main__":
     parser.add_argument('--env', type=str, default='dev')
     parsed_args = parser.parse_args()
     
-    tfilter =  get_submission_day()
+    # tfilter =  get_submission_day()
+    tfilter ="Interim"
     get_token()
     platform= ""
    
@@ -250,4 +251,5 @@ if __name__=="__main__":
         
     else:
         print("todo")
-        run_git_analysis_detail(platform)
+        run_git_analysis_detail(platform, challenge=1)
+

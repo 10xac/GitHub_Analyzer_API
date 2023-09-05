@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gcode"
+version = "0.1.0"
+authors = [
+  { name="Mahalet Taye", email="mahlet@10academy.org" },
+  
+]
+description = "A python package to interact with github code submission"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+             "boto3",
+             "botocore",
+             "cachetools",
+             "Flask",
+             "google_api_python_client",
+             "google_auth_oauthlib",
+             "lizard",
+             "numpy",
+             "pandas",
+             "protobuf",
+             "pytest",
+             "python_dateutil",
+             "pytz",
+             "radon",
+             "Requests",
+             #"apache-airflow"             
+]
+
+#[project.urls]
+#"Homepage" = "https://github.com/pypa/codeanalysis"
+#"Bug Tracker" = "https://github.com/pypa/codeanalysis/issues"
