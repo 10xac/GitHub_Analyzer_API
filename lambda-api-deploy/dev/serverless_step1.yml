@@ -1,5 +1,5 @@
 #org: tenx
-#app: tenx-auto-grade
+#app: 
 service: tenx-git-analyzer-api
 frameworkVersion: ">=3.0.0"
 
@@ -118,7 +118,7 @@ provider:
 #     - "!src/**"
     
 functions:
-  autograde:
+  gitanalzer:
     name: ${self:provider.stage}-${self:custom.appName}
     description: ${self:provider.stage}-${self:custom.appName}
     image: 070096167435.dkr.ecr.${self:provider.region}.amazonaws.com/${self:provider.stage}-git-analyzer:latest
@@ -201,7 +201,7 @@ functions:
 #           Path: /
           
   # extensions:
-  #   AutogradeLambdaFunction:
+  #   GitanalzerLambdaFunction:
   #     Properties:
   #       FileSystemConfigs:
   #         - Arn: !GetAtt AccessPointResource.Arn

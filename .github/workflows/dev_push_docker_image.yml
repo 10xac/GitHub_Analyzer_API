@@ -16,7 +16,7 @@ on:
 
 env:
   #ECR repo name
-  ecrreponame: dev-git-analyze
+  ecrreponame: dev-git-analyzer
   #Docker tag
   tag: latest
     
