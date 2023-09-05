@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import requests
+import awsgi
 from flask import Flask, jsonify
 from modules.Retrieve_Commit_History import Retrieve_Commit_History
 from modules.Run_Js_Analysis import Run_Js_Analysis
@@ -16,6 +17,10 @@ from modules.api_utils import add_js_additions, check_lang_exit, get_categorized
 
 
 app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return jsonify(status=200, message='Hello Flask!')
 
 @app.route('/user/<string:user>/<string:token>',methods=["GET"])
 def get_user(user, token, api=True)->json or dict:
@@ -635,6 +640,8 @@ def retrieve_commit_history(user, token, repo_name, branch, api=True)->json or d
             return jsonify({"commit_history":{"error":resp.json()}})
         return {"commit_history":{"error":resp.json()}}
 
+def handler(event, context):
+    return awsgi.response(app, event, context)
 
 # run the app
 if __name__ == "__main__":

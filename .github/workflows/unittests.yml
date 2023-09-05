@@ -1,0 +1,42 @@
+name: run-tests
+on:
+  pull_request:
+    branches:
+    - unittest
+  push:
+    branches:
+    - unittest
+
+jobs:
+  Run-unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install python
+        run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y python3
+      - name: Install pip
+        run: sudo apt install -y python3-pip
+      
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRIVATE_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Install and authenticate with private package
+        env:
+          GITHUB_TOKEN: ${{ secrets.LLPACKER_GITHUB_ACCESS_TOKEN }}
+        run: |
+          pip install --upgrade pip
+          pip install git+ssh://git@github.com/10xac/llpacker.git
+
+      - name: Install requirements
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip3 install -r requirements.txt
+          echo "## Installed requirements successfully"
+      - name: Run test cases
+        run: |
+          pytest src/tests

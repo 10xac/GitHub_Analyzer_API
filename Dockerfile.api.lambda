@@ -1,0 +1,29 @@
+FROM public.ecr.aws/lambda/python:3.10
+
+###Defined in ecr dockerfile found at
+###https://github.com/aws/aws-lambda-base-images/blob/python3.11/Dockerfile.python3.11
+###ENV LAMBDA_TASK_ROOT=/var/task
+###ENV LAMBDA_RUNTIME_DIR=/var/runtime
+### This means
+#WORKDIR ${LAMBDA_TASK_ROOT}
+
+RUN yum install -y git
+
+RUN pip install --upgrade pip
+
+#
+ENV PYTHONPATH="${LAMBDA_TASK_ROOT}:$PYTHONPATH"
+
+
+COPY ./requirements.txt ./requirements.txt
+RUN pip install -r ./requirements.txt
+
+###copy all files in currrent dir to WORKDIR/
+COPY . .
+
+RUN chmod 777 -R ${LAMBDA_TASK_ROOT}
+
+RUN ls ${LAMBDA_TASK_ROOT}/
+
+CMD ["app.handler"]
+

@@ -1,0 +1,210 @@
+#org: tenx
+#app: tenx-auto-grade
+service: tenx-git-analyzer-api
+frameworkVersion: ">=3.0.0"
+
+#Refernces
+# - https://adem.sh/blog/tutorial-fastapi-aws-lambda-serverless
+# - https://www.serverless.com/framework/docs/providers/aws/events/http-api
+# - https://www.serverless.com/framework/docs/providers/aws/events/apigateway#example-lambda-proxy-event-default
+# - (KEY REF) https://www.serverless.com/framework/docs/providers/aws/guide/functions
+# - https://aws.amazon.com/lambda/faqs/
+
+
+# plugins:
+#   - serverless-add-api-key
+#   - serverless-vpc-discovery
+#   - serverless-python-requirements
+#   - serverless-domain-manager
+
+custom:
+  appName: git-analyzer-api
+  pythonRequirements:
+    dockerizePip: true
+  customDomain:
+    domainName: gitanalysis.10academy.org
+    basePath: ''
+    stage: ${opt:stage}
+    certificateArn: arn:aws:acm:us-east-1:070096167435:certificate/6a164239-c77f-4f50-83ca-840091012dc5
+    endpointType: "Regional"
+    securityPolicy: tls_1_2
+    apiType: http
+    autoDomain: true
+    autoDomainWaitFor: 30
+    createRoute53Record: true
+       
+## Using module to load enviornment variables
+useDotenv: true
+provider:
+  name: aws
+  vpc:
+    subnetIds:
+      - subnet-0f848816007d926e7
+      - subnet-06b6b4f0179ad4dcb
+    securityGroupIds:
+      - sg-09e6294dfbefdd15f
+  logs:
+    httpApi: true
+  memorySize: 1024 # optional, in MB, default is 1024    
+  runtime: python3.9
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "ecr:InitiateLayerUpload"
+            - "ecr:SetRepositoryPolicy"
+            - "ecr:GetRepositoryPolicy"
+            - "ecr:DescribeImages"            
+          Resource:
+            !Join 
+              - ':'
+              - - 'arn:aws:ecr'
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - 'repository/*'
+        - Effect: "Allow"
+          Action:
+            # - "secretsmanager:GetSecretValue",
+            # - "secretsmanager:DescribeSecret",
+            # - "secretsmanager:PutSecretValue",
+            # - "secretsmanager:CreateSecret",
+            # - "secretsmanager:TagResource",
+            # - "secretsmanager:UpdateSecret",
+            # - "secretsmanager:GetRandomPassword",
+            # - "secretsmanager:ListSecrets",
+            - "logs:*"
+            - "secretsmanager:*"         
+            - "s3:*"
+            - "rds:*"
+          Resource:
+            !Join 
+              - ':'
+              - - '*'
+        - Effect: "Allow"
+          Action:
+            - "ec2:CreateNetworkInterface"
+            - "ec2:DescribeNetworkInterfaces"
+            - "ec2:DeleteNetworkInterface"
+            - "elasticfilesystem:ClientMount"
+            - "elasticfilesystem:ClientRootAccess"
+            - "elasticfilesystem:ClientWrite"
+            - "elasticfilesystem:DescribeMountTargets"
+          Resource: '*'
+      
+  stackTags:
+    App: ${self:provider.stage}-${self:custom.appName}
+    CFStack: ${self:provider.stage}-${self:custom.appName}
+
+   ## Give a custom stack name
+  stackName: ${self:provider.stage}-${self:custom.appName}
+  
+  ## Define Environment Variables that will be available to Functions
+  environment:
+    LOG_LEVEL: "INFO"
+    STAGE: ${self:provider.stage}
+
+# package:
+#   individually: true
+#   patterns:
+#     - "!*.txt"
+#     - "!*.md"
+#     - "!*.json"
+#     - "!node_modules/**"
+#     - "!layers/**"
+#     - "!resources/**"
+#     - "!src/**"
+    
+functions:
+  autograde:
+    name: ${self:provider.stage}-${self:custom.appName}
+    description: ${self:provider.stage}-${self:custom.appName}
+    image: 070096167435.dkr.ecr.${self:provider.region}.amazonaws.com/${self:provider.stage}-git-analyzer:latest
+    timeout: 120
+    fileSystemConfig:
+      localMountPath: /mnt/efs
+      arn: "arn:aws:elasticfilesystem:us-east-1:070096167435:access-point/fsap-069abc4c2a450511a"
+    vpc:
+      subnetIds:
+        - subnet-0f848816007d926e7
+        - subnet-06b6b4f0179ad4dcb
+      securityGroupIds:
+        - sg-09e6294dfbefdd15f
+    events:
+      - httpApi:
+          method: any
+          path: /{proxy+}
+
+    # events: 
+    # - http:
+    #     path: api/v1/
+    #     method: get
+    #     cors: true
+#        private: true
+
+# resources:
+
+#   # # https://dev.to/aws-builders/how-to-connect-efs-disk-to-a-lambda-function-360g
+#   # # https://towardsdatascience.com/the-road-to-a-serverless-ml-pipeline-in-production-part-ii-e065cf4caa93
+#   Resources:
+#     NetworkDrive:
+#       Type: AWS::EFS::FileSystem
+#       Properties:
+#         FileSystemTags:
+#           - Key: Name
+#             Value: LambdaDrive-${self:provider.stage}
+
+#     MountTargetResourceA:
+#       Type: AWS::EFS::MountTarget
+#       Properties:
+#         FileSystemId: !Ref NetworkDrive
+#         SubnetId: subnet-028a9b53678a0bf64
+#         SecurityGroups:
+#           - !GetAtt MountPointSecurityGroup.GroupId
+
+#     MountTargetResourceB:
+#       Type: AWS::EFS::MountTarget
+#       Properties:
+#         FileSystemId: !Ref NetworkDrive
+#         SubnetId: subnet-003f75c0e47f0b090
+#         SecurityGroups:
+#           - !GetAtt MountPointSecurityGroup.GroupId
+
+#     MountPointSecurityGroup:
+#       Type: AWS::EC2::SecurityGroup
+#       Properties:
+#         GroupDescription: Security group to allow NFS - Lambda communication.
+#         VpcId: vpc-04eedbe41ac02cac8
+#         SecurityGroupIngress:
+#           - IpProtocol: tcp
+#             FromPort: 2049
+#             ToPort: 2049
+#             SourceSecurityGroupId: sg-03f49fcdeb509e291 # Same as one for Lambda
+#         SecurityGroupEgress:
+#           - IpProtocol: '-1'
+#             CidrIp: 0.0.0.0/0
+
+#     AccessPointResource:
+#       Type: AWS::EFS::AccessPoint
+#       Properties:
+#         FileSystemId: !Ref NetworkDrive
+#         PosixUser:
+#           Uid: 1001
+#           Gid: 1001
+#         RootDirectory:
+#           CreationInfo:
+#             OwnerGid: 1001
+#             OwnerUid: 1001
+#             Permissions: 770
+#           Path: /
+          
+  # extensions:
+  #   AutogradeLambdaFunction:
+  #     Properties:
+  #       FileSystemConfigs:
+  #         - Arn: !GetAtt AccessPointResource.Arn
+  #           LocalMountPath: /mnt/efs
+            
+# custom:

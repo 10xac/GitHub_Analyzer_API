@@ -1,0 +1,51 @@
+name: Upload Docs
+
+on:
+  pull_request:
+    branches:
+    - deploy-docs
+  push:
+    branches:
+    - deploy-docs
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Set up Python
+      uses: actions/setup-python@master
+      with:
+        python-version: 3.9
+
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.PRIVATE_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # pip install -r src/requirements.txt
+        pip install sphinx
+
+    - name: Build docs
+      run: |
+        cd docs
+        sphinx-apidoc --module-first -o source ../src
+        pip install -e ../src/
+        make html
+
+    - name: Deploy to S3
+      uses: jakejarvis/s3-sync-action@master
+      with:
+        args: --acl public-read --follow-symlinks --delete
+      env:
+        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: 'us-east-1'   # optional: defaults to us-east-1
+        SOURCE_DIR: 'docs/build/html'      # optional: defaults to entire repository

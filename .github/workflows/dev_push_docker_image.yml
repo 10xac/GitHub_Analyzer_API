@@ -1,0 +1,76 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Deploy to Lambda
+
+permissions:
+  id-token: write # required to use OIDC authentication
+  contents: read # required to checkout the code from the repo
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+env:
+  #ECR repo name
+  ecrreponame: dev-git-analyze
+  #Docker tag
+  tag: latest
+    
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    runs-on: ubuntu-latest    
+    steps:
+      - uses: actions/checkout@v2
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::070096167435:role/github_actions_role
+          aws-region: us-east-1
+          
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ecrreponame }}
+          IMAGE_TAG: ${{ env.tag }}
+        run: |
+          bash env_setup.sh
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile.api.lambda .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Update lambda to load the latest ECR image
+        id: update-lambda
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ecrreponame }}
+          IMAGE_TAG: ${{ env.tag }}          
+          FUNC_NAME: ${{ env.ecrreponame }} 
+        run: |          
+          aws lambda update-function-code --region us-east-1 --function-name $FUNC_NAME --image-uri $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+
+      # - name: Serverless AWS Lambda Deploy
+      #   uses: serverless/github-action@v3.1
+      #   with:
+      #     args: -c "cd ./lambda-api-deploy && cp serverless_step1.yml serverless.yml && serverless deploy --stage dev --region us-east-1 --verbose && cp serverless_step2.yml serverless.yml && serverless deploy --stage dev --region us-east-1 --verbose"
+      #     entrypoint: /bin/sh
+      #   env:
+      #     SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
