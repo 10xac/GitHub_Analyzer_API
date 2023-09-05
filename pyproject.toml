@@ -34,7 +34,8 @@ dependencies = [
              "pytz",
              "radon",
              "Requests",
-             #"apache-airflow"             
+             "apache-airflow",
+             "serverless-wsgi"
 ]
 
 #[project.urls]

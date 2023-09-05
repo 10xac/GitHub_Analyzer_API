@@ -161,6 +161,7 @@ def get_auth(ssmkey=None, envvar=None, fconfig=None):
 
     return {}
 
+
 if __name__ == "__main__":
     
     path = os.path.dirname(os.path.realpath(__file__))

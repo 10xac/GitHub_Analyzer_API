@@ -3,7 +3,7 @@ import os
 import shutil
 import sys
 import requests
-import awsgi
+import serverless_wsgi
 from flask import Flask, jsonify
 from modules.Retrieve_Commit_History import Retrieve_Commit_History
 from modules.Run_Js_Analysis import Run_Js_Analysis
@@ -18,7 +18,7 @@ from modules.api_utils import add_js_additions, check_lang_exit, get_categorized
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/',methods=["GET"])
 def index():
     return jsonify(status=200, message='Hello Flask!')
 
@@ -582,7 +582,10 @@ def retrieve_commit_history(user, token, repo_name, branch, api=True)->json or d
         branch = None
 
     # create authourization headers for get request
-    headers = {"Authorization":"Bearer {}".format(token)}
+    if token == " ": 
+        headers = {}
+    else:
+        headers = {"Authorization":"Bearer {}".format(token)}
     # send get request to github api
     resp, resp_status_code = send_get_req(_url="https://api.github.com/search/repositories?q=repo:{}/{}".format(user,repo_name), _header=headers)
     if resp_status_code == 200:
@@ -641,7 +644,7 @@ def retrieve_commit_history(user, token, repo_name, branch, api=True)->json or d
         return {"commit_history":{"error":resp.json()}}
 
 def handler(event, context):
-    return awsgi.response(app, event, context)
+    return serverless_wsgi.handle_request(app, event, context)
 
 # run the app
 if __name__ == "__main__":

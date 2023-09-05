@@ -16,60 +16,64 @@ github_token = None
 
 
 def get_token():
-    gittoken = get_auth(ssmkey="git_token_tenx",
-                 fconfig=f'.env/git_token.json',
-                 envvar='gittoken',
-                 )
-    devtoken = get_auth(ssmkey="staging/strapi/token",
-                 fconfig=f'.env/dev-cms.json',
-                 envvar='devtoken',
-                 )
-    secret_dic =  {
-                "github_token": gittoken['token'],
-                "strapi_token": {
-                    "dev": devtoken['token'],
-                    "prod":devtoken['token'],
-                    "stage": devtoken['token'],
-                                }
-                    }
+
+    # get secret
+    if os.path.exists(".env/secret.json"):
+        with open(".env/secret.json", "r") as s:
+            secret_dic = json.load(s)
+    else:
+        gittoken = get_auth(ssmkey="git_token_tenx",
+                    fconfig=f'.env/git_token.json',
+                    envvar='gittoken',
+                    )
+        devtoken = get_auth(ssmkey="staging/strapi/token",
+                    fconfig=f'.env/dev-cms.json',
+                    envvar='devtoken',
+                    )
+        secret_dic =  {
+                    "github_token": gittoken['token'],
+                    "strapi_token": {
+                        "dev": devtoken['token'],
+                        "prod":devtoken['token'],
+                        "stage": devtoken['token'],
+                                    }
+                        }
+        try:
+            with open(".env/secret.json", "w") as outfile:
+                json.dump(secret_dic , outfile)
+                print ("Successfully created secret.json file")
+        except Exception as e:
+            print("Unable to create secret.json file")    
     
-    
-    
-    env_var_dic={
-                "port": 5000,
-                "host": "127.0.0.1."
-            }
+    # get env_var
+    if os.path.exists(".env/env_var.json"):
+        with open(".env/env_var.json", "r") as e:
+            env_var_dic = json.load(e)
+    else:
+        env_var_dic={
+                    "port": 5000,
+                    "host": "127.0.0.1."
+                }        
+        try:
+            with open(".env/env_var.json", "w") as file:
+                json.dump(env_var_dic , file)
+                print ("Successfully created env_var.json file")
+        except Exception as e:
+            print("Unable to create env_var.json file")
 
-    try:
-        with open(".env/secret.json", "w") as outfile:
-            json.dump(secret_dic , outfile)
-        
-        with open(".env/env_var.json", "w") as file:
-            json.dump(env_var_dic , file)
-        print ("Successfully created secret.json, env_var.json file")
-    except Exception as e:
-        print("Unable to create secret.json, env_var.json file")
+    return secret_dic, env_var_dic
 
+# get secret and envs
+secrets, env_var = get_token()
+github_token = secrets["github_token"]
+#
+strapi_token_dev = secrets["strapi_token"]["dev"]
+strapi_token_prod = secrets["strapi_token"]["prod"]
+api_root = "http://{}:{}/".format(env_var["host"], env_var["port"])
 
-
-
-if os.path.exists(".env/secret.json"):
-    
-    with open(".env/secret.json", "r") as s:
-        secrets = json.load(s)
-        github_token = secrets["github_token"]
-        
-else:
-    get_token()
-
-if os.path.exists(".env/env_var.json"):
-    with open(".env/env_var.json", "r") as e:
-        env_var = json.load(e)
-        host = env_var["host"]
-        port = env_var["port"]
-        api_root = "http://{}:{}/".format(host, port)
-else:
-    get_token()
+#===================================================================================================
+#==================================UTILS============================================================
+#===================================================================================================
 
 def get_id_userid_df(data_dict)->pd.DataFrame:
     """
@@ -121,6 +125,9 @@ def get_repo_meta_url(api_root, username, repo_name, token)->str:
     Returns:
         str: The url. 
     """
+    if token=='' or token==None:
+        token = github_token
+
     url = "{}/single_repos_meta/{}/{}/{}".format(api_root, username, token, repo_name)
     return url
 
@@ -138,6 +145,9 @@ def get_repo_pymetrics_url(api_root, username, token, repo_name):
     Returns:
         str: The url. 
     """
+    if token=='' or token==None:
+        token = github_token
+
     url = "{}/single_repos_pyanalysis/{}/{}/{}".format(api_root, username, token, repo_name)
     return url
 
@@ -157,6 +167,9 @@ def get_repo_meta_repo_pymetrics_url(api_root, username, token, repo_name):
     Returns:
         str: The url. 
     """
+    if token=='' or token==None:
+        token = github_token
+
     url = "{}/single_repos_meta_single_repos_analysis/{}/{}/{}".format(api_root, username, token, repo_name)
     return url
 

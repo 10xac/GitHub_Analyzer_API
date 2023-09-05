@@ -18,13 +18,11 @@ frameworkVersion: ">=3.0.0"
 #   - serverless-domain-manager
 
 custom:
-  appName: git-analyzer-api
-  pythonRequirements:
-    dockerizePip: true
+  appName: git-analyzer  
   customDomain:
     domainName: gitanalysis.10academy.org
     basePath: ''
-    stage: ${opt:stage}
+    stage: ${opt:stage,'dev'}
     certificateArn: arn:aws:acm:us-east-1:070096167435:certificate/6a164239-c77f-4f50-83ca-840091012dc5
     endpointType: "Regional"
     securityPolicy: tls_1_2
@@ -125,7 +123,7 @@ functions:
     timeout: 120
     fileSystemConfig:
       localMountPath: /mnt/efs
-      arn: "arn:aws:elasticfilesystem:us-east-1:070096167435:access-point/fsap-069abc4c2a450511a"
+      arn: "arn:aws:elasticfilesystem:us-east-1:070096167435:access-point/fsap-0506f1e153c5cbc67"
     vpc:
       subnetIds:
         - subnet-0f848816007d926e7
