@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import requests
+import logging
 import serverless_wsgi
 from flask import Flask, jsonify
 from modules.Retrieve_Commit_History import Retrieve_Commit_History
@@ -15,6 +16,17 @@ if not cpath in sys.path:
 
 from modules.api_utils import add_js_additions, check_lang_exit, get_categorized_file_level_js, get_categorized_file_level_py, get_cc_summary, get_commit_hist, get_file_level_summary, get_filtered_file_level, get_js_cc_summary, get_jsrepo_level_summary, get_recent_commit_stamp, get_repo_level_summary, retrieve_commits, retrieve_repo_meta, run_jsanalysis, run_pyanalysis, run_to_get_adds_and_save_content, send_get_req
 
+
+#logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+if os.environ.get("AWS_LAMBDA_FUNCTION_NAME", None) is not None or os.environ.get("AWS_EXECUTION_ENV", None) is not None:
+    # AWS Lambda environment
+    temp_dir = "/tmp"
+else:
+    # Local environment
+    temp_dir = "tmp"
 
 app = Flask(__name__)
 
@@ -41,6 +53,7 @@ def get_user(user, token, api=True)->json or dict:
     # create authourization headers for get request
     headers = {"Authorization":"Bearer {}".format(token)}
     # send get request to github api
+    logger.info("Sending get request to github api...")
     resp, resp_status_code = send_get_req(_url='https://api.github.com/users/{}'.format(user), _header=headers)
     if resp_status_code == 200:
         # retrive response body
@@ -49,6 +62,7 @@ def get_user(user, token, api=True)->json or dict:
         dt = {k:d[k] for k in info_list}
         
         # issues
+        logger.info("Sending get request to github api for issues...")
         resp, resp_status_code = send_get_req(_url='https://api.github.com/search/issues?q=author:{}'.format(user), _header=headers)
         if resp_status_code == 200:
             d = resp.json()
@@ -57,6 +71,7 @@ def get_user(user, token, api=True)->json or dict:
             dt["issues"] = None
 
         # pull requests
+        logger.info("Sending get request to github api for pull requests...")
         resp, resp_status_code = send_get_req(_url='https://api.github.com/search/issues?q=author:{}+is:pr'.format(user), _header=headers)
         if resp_status_code == 200:
             d = resp.json()
@@ -64,6 +79,8 @@ def get_user(user, token, api=True)->json or dict:
         else:
             dt["pull_requests"] = None
 
+        # commits
+        logger.info("Sending get request to github api for commits...")
         resp, resp_status_code = send_get_req(_url='https://api.github.com/search/commits?q=author:{}'.format(user), _header=headers)
         if resp_status_code == 200:
             d = resp.json()
@@ -99,12 +116,15 @@ def get_repo_meta(user, token, api=True)->json or dict:
     # create authourization headers for get request
     headers = {"Authorization":"Bearer {}".format(token)}
     # send get request to github api
+    logger.info("Sending get request to github api...")
     resp, resp_status_code = send_get_req(_url='https://api.github.com/users/{}/repos'.format(user), _header=headers)
     if resp_status_code == 200:
         # retrive response body
         d = resp.json()
         info_list = ["forks", "languages_url", "contributors_url", "branches_url", "description", "html_url"]
         resp_dict = {repo["name"]:{k:repo[k] for k in info_list} for repo in d}
+
+        logger.info("Sending get request to github api for programming languages...")
         dt = retrieve_repo_meta(resp_json=resp_dict, headers=headers, user=user)
         if api:
             return jsonify(dt)
@@ -140,6 +160,7 @@ def get_single_repo_meta(user, token, repo_name, api=True)->json or dict:
     # create authourization headers for get request
     headers = {"Authorization":"Bearer {}".format(token)}
     # send get request to github api
+    logger.info("Sending get request to github api...")
     resp, resp_status_code = send_get_req(_url="https://api.github.com/search/repositories?q=repo:{}/{}".format(user,repo_name), _header=headers)
     if resp_status_code == 200:
         # retrive response body
@@ -147,6 +168,7 @@ def get_single_repo_meta(user, token, repo_name, api=True)->json or dict:
         info_list = ["forks", "languages_url", "contributors_url", "branches_url", "description", "html_url"]
         resp_dict = {repo["name"]:{k:repo[k] for k in info_list} for repo in d["items"]}
         if len(resp_dict) == 0:
+            logger.info("Sendign get request to github to retrieve rpository details...")
             resp, resp_status_code = send_get_req(_url='https://api.github.com/users/{}/repos'.format(user), _header=headers)
             if resp_status_code == 200:
                 # retrive response body
@@ -160,6 +182,8 @@ def get_single_repo_meta(user, token, repo_name, api=True)->json or dict:
                 if api:
                     return jsonify({"error":"Not Found"})
                 return {"error":"Not Found"}
+            
+        logger.info("Sending get request to github api to retrive repository metadata...")
         dt = retrieve_repo_meta(resp_json=resp_dict, headers=headers, user=user)
         if api:
             return jsonify(dt)
@@ -191,17 +215,20 @@ def get_single_repo_pyanalysis(user, token, repo_name, api=True)->json or dict:
     # create authourization headers for get request
     headers = {"Authorization":"Bearer {}".format(token)}
     # send get request to github api
+    logger.info("Sending get request to github api...")
     resp, resp_status_code = send_get_req(_url="https://api.github.com/search/repositories?q=repo:{}/{}".format(user,repo_name), _header=headers)
     if resp_status_code == 200:
         # retrive response body
         d = resp.json()
         repo_details = [repo for repo in d["items"]]
         if len(repo_details) == 0:
+            logger.info("Using alternate method to retrieve rpository details...")
             resp, resp_status_code = send_get_req(_url='https://api.github.com/users/{}/repos'.format(user), _header=headers)
             if resp_status_code == 200:
                 # retrive response body
                 d = resp.json()
                 # retrieve named repo
+                logger.info("Retrieving named repository...")
                 repo_details = [repo for repo in d if repo["name"]==repo_name]
                 if len(repo_details) == 0:
                     if api:
@@ -214,13 +241,15 @@ def get_single_repo_pyanalysis(user, token, repo_name, api=True)->json or dict:
         lang_list = ["Python", "Jupyter Notebook"]
     
         # check if the repo contains python files
+        logger.info("Checking if repository contains python files...")
         if  check_lang_exit(user=user, repo=repo_name, headers=headers, lang_list=lang_list):
 
-            stderr, return_code, additions_dict, files = run_to_get_adds_and_save_content(repo_name, repo_dict=repo_details[0], file_ext=[".py",".ipynb"])
+            logger.info("Clonning repository and obtaining metadata...")
+            stderr, return_code, additions_dict, files, file_check_results, commit_history_dict, converted_nbs = run_to_get_adds_and_save_content(user=user ,repo_name=repo_name, repo_dict=repo_details[0], file_ext=[".py", ".ipynb"], branch=branch, token=token, path=temp_dir)
 
             # if there is no error
             if return_code == 0:
-
+                logger.info("Running python code analysis...")
                 # run analysis for python codes
                 analysis_results = run_pyanalysis()
                 # get cyclomatic complexity values for each file
@@ -279,16 +308,19 @@ def single_repos_meta_single_repos_analysis(user, token, repo_name, branch, api=
     # create authourization headers for get request
     headers = {"Authorization":"Bearer {}".format(token)}
     # send get request to github api
+    logger.info("Sending get request to github api...")
     resp, resp_status_code = send_get_req(_url="https://api.github.com/search/repositories?q=repo:{}/{}".format(user,repo_name), _header=headers)
     if resp_status_code == 200:
         # retrive response body
         d = resp.json()
         
+        logger.info("preparing the list of user repos as dicts of repo-name:{repo properties key:value}...")
         info_list = ["name","forks", "languages_url", "contributors_url", "branches_url", "description", "html_url"]
         resp_dict = {repo["name"]:{k:repo[k] for k in info_list} for repo in d["items"]}
         
-
+        
         if len(resp_dict) > 0:
+            logger.info("processing list of user repos  ...")
             repo_name = list(resp_dict.keys())[0]
             resp_dict[repo_name]["repo_name"] = repo_name
             if branch:
@@ -296,7 +328,7 @@ def single_repos_meta_single_repos_analysis(user, token, repo_name, branch, api=
 
         repo_details = [repo for repo in d["items"]]
         if len(repo_details) == 0:
-            print("Using alternate method to retrieve rpository details...\n")
+            logger.info("Using alternate method to retrieve rpository details...")
             resp, resp_status_code = send_get_req(_url='https://api.github.com/repos/{}/{}'.format(user,repo_name), _header=headers)
             if resp_status_code == 200:
                 # retrive response body
@@ -309,6 +341,7 @@ def single_repos_meta_single_repos_analysis(user, token, repo_name, branch, api=
                 else:
                     repo_details = []
 
+                logger.info("preparing the list of user repos as dicts of repo-name:{repo properties key:value}...")
                 resp_dict = {d["name"]:{k:d[k] for k in info_list} for i in range(len(d)) if d["name"].lower() == repo_name.lower()}
                 if len(resp_dict) > 0:
                     repo_name = list(resp_dict.keys())[0]
@@ -328,18 +361,23 @@ def single_repos_meta_single_repos_analysis(user, token, repo_name, branch, api=
                     return jsonify({"repo_meta":{"error":"Not Found"}, "analysis_results":{"error":"Not Found"}}) 
                 return {"repo_meta":{"error":"Not Found"}, "analysis_results":{"error":"Not Found"}}
                 
+        logger.info("Sending get request to github api to retrive repository metadata...")
         dt = retrieve_repo_meta(resp_json=resp_dict, headers=headers, user=user, branch=branch)
 
         lang_list = ["Python", "Jupyter Notebook", "JavaScript"]
     
         # check if the repo contains python files
+        logger.info(f"Checking if repository contains {lang_list} files...")
         if  check_lang_exit(user=user, repo=repo_name, headers=headers, lang_list=lang_list):
 
-            stderr, return_code, additions_dict, files, file_check_results, commit_history_dict, converted_nbs = run_to_get_adds_and_save_content(user=user ,repo_name=repo_name, repo_dict=repo_details[0], file_ext=[".py", ".ipynb", ".js"], branch=branch, token=token)
+            logger.info("Clonning repository and obtaining metadata...")
+            stderr, return_code, additions_dict, files, file_check_results, commit_history_dict, converted_nbs = run_to_get_adds_and_save_content(user=user ,repo_name=repo_name, repo_dict=repo_details[0], file_ext=[".py", ".ipynb", ".js"], branch=branch, token=token, path=temp_dir)
 
             # Make languages dynamic with number of files of the language
             lang_files_pairing = {"Jupyter Notebook":"num_ipynb", "Python":"num_py", "JavaScript":"num_js"}
 
+            # create a list of dictionaries of languages and their percentage
+            logger.info("Creating a list of dictionaries of languages and their percentage...")
             tmp_list = []
             for k,v in lang_files_pairing.items():
                 for tup in dt[repo_name]["languages"]:
@@ -365,8 +403,10 @@ def single_repos_meta_single_repos_analysis(user, token, repo_name, branch, api=
                 analysis_results = dict()
 
                 analysis_results_js = dict()
-
+                
                 if file_check_results["num_py"] > 0 or file_check_results["num_ipynb"] > 0:
+                    logger.info("Running python code analysis...")
+
                     # if there is atleast one python file run analysis for python codes
                     analysis_results = run_pyanalysis()
                     # get cyclomatic complexity values for each file
@@ -381,8 +421,10 @@ def single_repos_meta_single_repos_analysis(user, token, repo_name, branch, api=
                     commit_history_dict["file_level"] = cat_file_level_py
                     analysis_results["file_level"] = cat_file_level_py
 
-
+                
                 if file_check_results["num_js"] > 0:
+                    logger.info("Running javascript code analysis...")
+
                     # if there is atleast one javascript file run analysis for javascript codes
                     run_jsanalysis = Run_Js_Analysis(files, additions_dict)
                     analysis_results_js = run_jsanalysis.run_analysis()
@@ -512,7 +554,8 @@ def get_single_repo_jsanalysis(user, token, repo_name, branch, api=True)->json o
         # check if the repo contains python files
         if  check_lang_exit(user=user, repo=repo_name, headers=headers, lang_list=lang_list):
 
-            stderr, return_code, additions_dict, files, file_check_results, commit_history_dict, converted_nbs= run_to_get_adds_and_save_content(user=user ,repo_name=repo_name, repo_dict=repo_details[0], file_ext=[".js"], branch=branch, token=token)
+            logger.info("Clonning repository and obtaining metadata...")
+            stderr, return_code, additions_dict, files, file_check_results, commit_history_dict, converted_nbs= run_to_get_adds_and_save_content(user=user ,repo_name=repo_name, repo_dict=repo_details[0], file_ext=[".js"], branch=branch, token=token, path=temp_dir)
 
             # if there is no error
             if return_code == 0:

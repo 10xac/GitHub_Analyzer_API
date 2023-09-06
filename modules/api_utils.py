@@ -791,7 +791,7 @@ def run_to_get_adds_and_save_content(user, repo_name, repo_dict, file_ext, token
         A tuple of stderr, return_code of the cloning process, additions_dict and files
     """
     # dir for named repo
-    repo_path = create_repo_dir(repo_name)
+    repo_path = create_repo_dir(repo_name, tmp_dir=path)
 
     # clone repo
     stderr, return_code = clone_repo(
