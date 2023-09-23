@@ -231,8 +231,13 @@ class Retrieve_Commit_History:
             if status[0] == "R":
                 similarity_index = status[1:]
                 status = "R"
+           
             
-
+            if status=="++++-":
+                pass
+            else:
+                print(status)
+            
             change_status = change_status_d[status]
 
             if change_status == "Renamed":

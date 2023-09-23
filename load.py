@@ -107,7 +107,7 @@ def run_git_analysis_detail(platform="dev"):
 
 
         current_week = datetime.datetime.now().isocalendar()[1] - 0
-        training_week = current_week - 33
+        training_week = current_week - 34 ## 33
         
         week= "week{}".format(training_week)
         print("\nCurrent week is {}\n".format(week))
@@ -230,7 +230,8 @@ if __name__=="__main__":
     parser.add_argument('--env', type=str, default='dev')
     parsed_args = parser.parse_args()
     
-    tfilter =  get_submission_day()
+    # tfilter =  get_submission_day()
+    tfilter= "Final"
     get_token()
     platform= ""
    
