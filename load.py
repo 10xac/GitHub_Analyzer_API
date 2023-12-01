@@ -126,20 +126,7 @@ def run_git_analysis_detail(platform="dev", challenge=None):
 
         # check if assignmnent_data_df was returned
         if isinstance(assignmnent_data_df, pd.DataFrame) and not assignmnent_data_df.empty:
-            #trainee_df = get_id_userid_df(trainee_dict)
-
-
-
-            # read in the data
-            #dt_user = pd.read_csv("data/github_usernames.csv")
-            #dt_repo = pd.read_csv("data/github_repos_wk1.csv")
-            #github_df = dt_user.merge(dt_repo, on="trainee_id")
-            #github_df = pd.read_csv("data/try.csv")
-            #github_df = pd.read_csv("data/week_data/batch4/b4_wk{}.csv".format(training_week))
-            #github_df = pd.read_csv("data/week_data/batch5/b5_week0_github_df.csv")
-
-            #gd = gsheet(sheetid="1gtkfGAmH9HR05_i7g6t2tF9t8LHfopybIhEqYdrxCSg",fauth='gdrive_10acad_auth.json')
-            #gsheet_df = gd.get_sheet_df("b5_github_submissions")
+            
 
 
             prep_assn = PrepareAssignmentDf(assignmnent_data_df, run_number, "root_url")
@@ -156,8 +143,8 @@ def run_git_analysis_detail(platform="dev", challenge=None):
 
             github_df = prep_assn.get_df(week_submission_path)
 
-            starter_code_url = None #"https://github.com/10xac/Twitter-Data-Analysis"
-
+            # starter_code_url = None #"https://github.com/10xac/Twitter-Data-Analysis"
+            starter_code_url = "https://github.com/10xac/week0_starter_network_analysis"
 
 
 
