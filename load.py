@@ -13,7 +13,7 @@ curdir = os.path.dirname(os.path.realpath(__file__))
 cpath = os.path.dirname(curdir)
 if not cpath in sys.path:
     sys.path.append(cpath)
-
+print(cpath )
 import argparse
   
 from modules.analyzer_utils import   get_repo_meta_repo_analysis
@@ -95,7 +95,7 @@ def run_git_analysis_detail(platform="dev", challenge=None):
 
     if github_token and strapi_token:
 
-        state_path = "data/api_state/week/week_state.pk"
+        state_path = "GitHub_Analyzer_API/data/api_state/week/week_state.pk"
         
         if os.path.exists(state_path):
             with open(state_path, "rb") as s_d:
@@ -105,10 +105,15 @@ def run_git_analysis_detail(platform="dev", challenge=None):
             print("\nThe state file does not exit and system will exit now...\n")
             sys.exit(1)
 
-
-        current_week = datetime.datetime.now().isocalendar()[1] - 0
-        training_week = current_week - 33
         
+        state_dict['batch'] = 7
+        current_week = datetime.datetime.now().isocalendar()[1] - 0
+        state_dict['current_week'] =  current_week
+        
+        print ("current week ......", current_week)
+        print(state_dict)
+        training_week = current_week - 49
+        print ("training  week ......", training_week)
         week= "week{}".format(training_week)
         print("\nCurrent week is {}\n".format(week))
         batch = state_dict["batch"]
@@ -119,8 +124,8 @@ def run_git_analysis_detail(platform="dev", challenge=None):
         previous_analyzed_assignments = state_dict["previously_analyzed_assignments"]
 
         client_url = base_url + "/graphql"
-        print(f"INFO: Getting Challenge {challenge} submissions")
-        assgn = Get_Assignment_Data(week, batch, base_url, strapi_token, previous_analyzed_assignments, challenge=challenge)
+        print(f"INFO: Getting Challenge {week} submissions")
+        assgn = Get_Assignment_Data(week, batch, base_url, strapi_token, previous_analyzed_assignments,)
 
         assignmnent_data_df = assgn.filtered_data_df()
 
@@ -218,7 +223,7 @@ if __name__=="__main__":
     parsed_args = parser.parse_args()
     
     # tfilter =  get_submission_day()
-    tfilter ="Interim"
+    tfilter ="GitHub"
     get_token()
     platform= ""
    
@@ -238,5 +243,5 @@ if __name__=="__main__":
         
     else:
         print("todo")
-        run_git_analysis_detail(platform, challenge=1)
+        run_git_analysis_detail(platform, )
 
